@@ -1,0 +1,39 @@
+name: CI Matrix Summary
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+        
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Pytest
+        run: pytest -v -s
+
+      - name: Summary - Pass
+        # Only run this if the Pytest step succeeds
+        if: success()
+        run: |
+          echo "## CI Matrix Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Python ${{ matrix.python-version }} → PASS ✅" >> $GITHUB_STEP_SUMMARY
+
+      - name: Summary - Fail
+        # Only run this if the Pytest step fails
+        if: failure()
+        run: |
+          echo "## CI Matrix Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Python ${{ matrix.python-version }} → FAIL ❌" >> $GITHUB_STEP_SUMMARY
