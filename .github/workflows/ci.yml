@@ -25,15 +25,29 @@ jobs:
         run: pytest -v -s
 
       - name: Summary - Pass
-        # Only run this if the Pytest step succeeds
         if: success()
         run: |
           echo "## CI Matrix Test Summary" >> $GITHUB_STEP_SUMMARY
           echo "Python ${{ matrix.python-version }} → PASS ✅" >> $GITHUB_STEP_SUMMARY
 
       - name: Summary - Fail
-        # Only run this if the Pytest step fails
         if: failure()
         run: |
           echo "## CI Matrix Test Summary" >> $GITHUB_STEP_SUMMARY
           echo "Python ${{ matrix.python-version }} → FAIL ❌" >> $GITHUB_STEP_SUMMARY
+
+  summary:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate Overall Summary
+        run: |
+          echo "## Overall Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.test.result }}" == "success" ]]; then
+            echo "Overall result → PASS ✅" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Overall result → FAIL ❌" >> $GITHUB_STEP_SUMMARY
+          fi
